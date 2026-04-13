@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CATEGORIES } from '../lib/constants'
+import { supabase } from '../lib/supabase'
 import QRScannerModal from './QRScannerModal'
 
 function parseInvoiceQR(qrString) {
@@ -38,8 +39,9 @@ export default function ExpenseForm({ onAdd }) {
   const [loading, setLoading] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [scannedMeta, setScannedMeta] = useState(null)
+  const [duplicateInvoice, setDuplicateInvoice] = useState(null)
 
-  function handleQRScan(text) {
+  async function handleQRScan(text) {
     setShowScanner(false)
     const parsed = parseInvoiceQR(text)
     setForm((prev) => ({
@@ -50,6 +52,15 @@ export default function ExpenseForm({ onAdd }) {
     }))
     if (parsed.nif || parsed.total_vat != null) {
       setScannedMeta({ nif: parsed.nif, total_vat: parsed.total_vat })
+    }
+    if (parsed.invoice_number) {
+      const { data } = await supabase
+        .from('expenses')
+        .select('description, amount, date, user_name')
+        .eq('invoice_number', parsed.invoice_number)
+        .limit(1)
+        .maybeSingle()
+      if (data) setDuplicateInvoice(data)
     }
   }
 
@@ -101,6 +112,29 @@ export default function ExpenseForm({ onAdd }) {
             Ler Fatura
           </button>
         </div>
+
+        {duplicateInvoice && (
+          <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 text-xs text-red-700">
+            <div className="flex justify-between items-start gap-2">
+              <div>
+                <p className="font-semibold mb-0.5">Fatura já registada</p>
+                <p className="text-red-500">
+                  {duplicateInvoice.description} — {Number(duplicateInvoice.amount).toFixed(2)} € em{' '}
+                  {new Date(duplicateInvoice.date + 'T00:00:00').toLocaleDateString('pt-PT')}
+                  {duplicateInvoice.user_name ? ` (${duplicateInvoice.user_name})` : ''}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDuplicateInvoice(null)}
+                className="text-red-300 hover:text-red-500 text-lg leading-none shrink-0"
+                aria-label="Ignorar aviso"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
 
         {scannedMeta && (
           <div className="bg-brand-sand border border-brand-stone/40 rounded-lg px-3 py-2 flex gap-4 text-xs text-brand-stone">
@@ -193,8 +227,8 @@ export default function ExpenseForm({ onAdd }) {
 
         <button
           type="submit"
-          disabled={loading}
-          className="bg-brand-amber hover:bg-brand-rust text-brand-dark hover:text-white font-semibold py-2.5 rounded-lg text-sm transition disabled:opacity-50"
+          disabled={loading || !!duplicateInvoice}
+          className="bg-brand-amber hover:bg-brand-rust text-brand-dark hover:text-white font-semibold py-2.5 rounded-lg text-sm transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {loading ? 'A guardar...' : '+ Adicionar Despesa'}
         </button>
