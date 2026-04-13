@@ -17,12 +17,22 @@ export default function MonthPicker({ value, onChange }) {
   }
 
   return (
-    <div className="flex items-center gap-4">
-      <button onClick={prev} className="text-gray-400 hover:text-gray-600 text-xl font-bold px-2">&lt;</button>
-      <span className="text-gray-700 font-semibold text-base w-40 text-center">
+    <div className="flex items-center gap-2">
+      <button
+        onClick={prev}
+        className="text-brand-stone hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-brand-dark transition text-lg font-bold"
+      >
+        ‹
+      </button>
+      <span className="text-white font-semibold text-sm w-36 text-center">
         {months[month - 1]} {year}
       </span>
-      <button onClick={next} className="text-gray-400 hover:text-gray-600 text-xl font-bold px-2">&gt;</button>
+      <button
+        onClick={next}
+        className="text-brand-stone hover:text-white w-8 h-8 flex items-center justify-center rounded-lg hover:bg-brand-dark transition text-lg font-bold"
+      >
+        ›
+      </button>
     </div>
   )
 }
