@@ -126,9 +126,20 @@ export default function ExpenseForm({ onAdd }) {
               </div>
               <button
                 type="button"
-                onClick={() => setDuplicateInvoice(null)}
+                onClick={() => {
+                  setDuplicateInvoice(null)
+                  setScannedMeta(null)
+                  setForm({
+                    description: '',
+                    invoice_number: '',
+                    amount: '',
+                    category: 'Outros',
+                    date: new Date().toISOString().split('T')[0],
+                    is_casal: false,
+                  })
+                }}
                 className="text-red-300 hover:text-red-500 text-lg leading-none shrink-0"
-                aria-label="Ignorar aviso"
+                aria-label="Limpar formulário"
               >
                 ×
               </button>
